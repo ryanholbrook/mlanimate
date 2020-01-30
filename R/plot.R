@@ -90,12 +90,13 @@ gg_mix_label <- function(mus, classes = NULL, size = 10, ...) {
 #' Plot an optimal boundary together with density contours and a sample
 #' 
 gg_plot_boundary <- function(sample, density, title = "") {
-    ggplot() +
+    ggplot2::ggplot() +
     ## gg_sample(data = density, size = 1.5, alpha = 0.1, shape = 15) +
     gg_sample(data = sample) +
     gg_density(data = density, z = optimal, breaks = c(0), linetype = 2) +
     gg_density(data = density, z = fitted, breaks = c(0.5)) +
-    coord_fixed(expand = FALSE) +
-    xlim(min(density$x), max(density$y)) +
-    ylim(min(density$y), max(density$y))
+    ggplot2::coord_fixed(expand = FALSE) +
+    ggplot2::xlim(min(density$x), max(density$y)) +
+    ggplot2::ylim(min(density$y), max(density$y)) +
+    ggtitle(title)
 }
