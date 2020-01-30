@@ -1,13 +1,31 @@
 Package: mlanimation
-Title: What the Package Does (One Line, Title Case)
+Title: Plots and animations for machine learning topics
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Ryan",
+           family = "Holbrook",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: What license it uses
+           email = "ryanholbrook@gmail.com")
+Description: Provides plots and animations for machine learning topics.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Imports: 
+    gganimate
+    ggplot2,
+Suggests: 
+    MASS,
+    class,
+    earth,
+    elmNNRcpp
+    extraTrees,
+    kernlab,
+    mboost,
+    mda,
+    mgcv,
+    naivebayes,
+    nnet,
+    polspline,
+    ranger,
+    rpart,
+    xgboost,
