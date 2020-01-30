@@ -34,6 +34,9 @@ fit_and_predict_qda <- function(sample, density, ...) {
 }
 
 #' An internal function
+#'
+#' @noRd
+#' @keywords internal
 mda_opt <- function(data) {
     go <- function(n) {
         fit_mda <- mda::mda(class ~ x + y, data = data, subclasses = n)
