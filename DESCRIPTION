@@ -34,5 +34,6 @@ Suggests:
     rpart,
     xgboost,
     mvnfast,
-    shadowtext
+    shadowtext,
+    patchwork
 RoxygenNote: 7.0.2
