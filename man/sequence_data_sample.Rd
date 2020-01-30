@@ -4,10 +4,12 @@
 \alias{sequence_data_sample}
 \title{Create a data frame sequenced for animation of a sample}
 \usage{
-sequence_data_sample(data, delta = 1L)
+sequence_data_sample(data, start = 1L)
 }
 \arguments{
-\item{data}{`data.frame`: a data frame to sequence}
+\item{data}{`data.frame`: the data to sequence}
+
+\item{start}{`int`: how many rows for the first sample}
 
 \item{delta}{`int`: how many rows to increase by at each iteration}
 }
@@ -16,5 +18,5 @@ a data.frame with successive groups of `data` of size `delta`;
 `data` is randomized before sequencing
 }
 \description{
-Create a data frame sequenced for animation of a sample
+A function used internally by `animate_boundary`.
 }

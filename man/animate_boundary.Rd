@@ -4,7 +4,7 @@
 \alias{animate_boundary}
 \title{Animate the evolution of a decision boundary as the sample size grows}
 \usage{
-animate_boundary(sample, density, delta, fit_and_predict, start = 0)
+animate_boundary(sample, density, fit_and_predict, delta, start = 1L)
 }
 \arguments{
 \item{sample}{`data.frame`: the complete sample data; should have
@@ -14,12 +14,14 @@ columns `x`, `y`, and `class`}
 `y`; should have columns `x`, `y`, and `optimal`, the contours
 of the optimal decision distribution}
 
-\item{delta}{`integer`: how many points to add at each step of the
-animation}
-
 \item{fit_and_predict}{`function(sample, density, ...)`: fits a learner
 to the sample data and returns its predictions on the density; `...`
 are parameters passed to the learner}
+
+\item{delta}{`integer`: how many points to add at each step of the
+animation}
+
+\item{start}{`integer`: how many rows for the first sample}
 }
 \description{
 Animate the evolution of a decision boundary as the sample size grows

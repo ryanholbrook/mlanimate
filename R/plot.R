@@ -70,8 +70,8 @@ gg_mix_label <- function(mus, classes = NULL, size = 10, ...) {
     class <- do.call(c, map2(0:(length(ns) - 1), ns, rep.int))
     mu_all <- do.call(rbind, mus)
     data <- cbind(mu_all, component, class) %>%
-        set_colnames(c("x", "y", "component", "class")) %>%
-        as_tibble()
+        magrittr::set_colnames(c("x", "y", "component", "class")) %>%
+        dplyr::as_tibble()
     if (is.null(classes)) {
         subdata <- data
     } else {

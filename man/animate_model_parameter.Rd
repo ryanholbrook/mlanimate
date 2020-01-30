@@ -5,7 +5,7 @@
 \title{Animate changes in a decision boundary as a parameter in a model
 changes}
 \usage{
-animate_model_parameter(sample, density, fit_and_predict, param_seq)
+animate_model_parameter(sample, density, fit_and_predict, params, ...)
 }
 \arguments{
 \item{sample}{`data.frame`: the complete sample data; should have
@@ -20,10 +20,13 @@ learner to the sample data and returns its predictions on the
 density as a data frame; `param` is the parameter value to
 vary over}
 
-\item{param_seq}{`vector`: a vector of values for the parameter on
-which to animate the model}
+\item{params}{`list`: a named list of parameters with each
+entry a vector of values for that parameter}
 
-\item{param_name}{`string`: the name of the parameter to vary over}
+\item{...}{: arguments to pass on to `gganimate::animate`}
+}
+\value{
+a rendered `gganimate` animation object
 }
 \description{
 Animate changes in a decision boundary as a parameter in a model

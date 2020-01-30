@@ -10,7 +10,7 @@
 make_mvn_sample <- function(n, mu_0, sigma_0, mu_1, sigma_1, p_0) {
     n_0 <- rbinom(1, n, p_0)
     n_1 <- n - n_0
-    sample_mvn <- as_tibble(
+    sample_mvn <- dplyr::as_tibble(
         rbind(mvnfast::rmvn(n_0,
                             mu = mu_0,
                             sigma = sigma_0),
@@ -65,7 +65,7 @@ make_density_mvn <- function(mean_0, sigma_0, mean_1, sigma_1, p_0,
     dfun_0 <- function(x) mvnfast::dmvn(x, mu_0, sigma_0)
     dfun_1 <- function(x) mvnfast::dmvn(x, mu_1, sigma_1)
     optimal_mvn <- function(x, y) optimal_predict(c(x, y), p_0, dfun_0, dfun_1)
-    density_mvn <-as_tibble(
+    density_mvn <- dplyr::as_tibble(
         cbind(density_mvn,
               t(mapply(optimal_mvn,
                        density_mvn$x, density_mvn$y))))
@@ -148,7 +148,7 @@ make_density_mix <- function(mean_0, sigma_0, w_0,
                                          sigma = sigma_1,
                                          w = w_1)
     optimal_mix <- function(x, y) optimal_predict(c(x, y), p_0, dfun_0, dfun_1)
-    density_mix <-as_tibble(
+    density_mix <- dplyr::as_tibble(
         cbind(density_mix,
               t(mapply(optimal_mix,
                        density_mix$x, density_mix$y))))
