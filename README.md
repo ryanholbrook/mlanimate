@@ -8,7 +8,7 @@
 
 ## Installation
 
-This is mostly a personal package at the moment with nothing guaranteed to work at any given moment. But, if you desire, you can install it from the repo the usual way.
+This is mostly a personal package at the moment with nothing guaranteed to work. But, if you desire, you can install it from the repo the usual way.
 
 ```r
 remotes::install_github("ryanholbrook/mlanimate")
