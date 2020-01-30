@@ -1,3 +1,6 @@
+#' @importFrom stats glm predict
+NULL
+
 fit_and_predict_nb <- function(sample, density, ...) {
     fit_nb <- naivebayes::naive_bayes(factor(class) ~ x + y, data = sample)
     pred_nb <- predict(fit_nb, newdata = density[, c("x", "y")], type = "prob")
@@ -30,9 +33,9 @@ fit_and_predict_mda <- function(sample, density, ...) {
 }
 
 fit_and_predict_glm <- function(sample, density, ...) {
-    fit_glm <- glm(class ~ x + y, data = sample, family = binomial)
+    fit_glm <- glm(class ~ x + y, data = sample, family = "binomial")
     pred_glm <- predict(fit_glm, newdata = density_mvn, type = "response")
-    density_glm <- cbind(density, fitted = pred_glm)
+    density_glm <- cbind(density, "fitted" = pred_glm)
     density_glm
 }
 
@@ -68,7 +71,7 @@ fit_and_predict_knn <- function(sample, density, ...) {
                            test = density[, c("x", "y")],
                            k = 5)
     density_knn <- cbind(density,
-                         fitted = as.integer(pred_knn) - 1.5)
+                         "fitted" = as.integer(pred_knn) - 1.5)
     density_knn
 }
 

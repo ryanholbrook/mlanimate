@@ -11,13 +11,17 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    gganimate
+    gganimate,
     ggplot2,
+    magrittr,
+    purrr,
+    dplyr,
+    stats
 Suggests: 
     MASS,
     class,
     earth,
-    elmNNRcpp
+    elmNNRcpp,
     extraTrees,
     kernlab,
     mboost,
@@ -29,3 +33,6 @@ Suggests:
     ranger,
     rpart,
     xgboost,
+    mvnfast,
+    shadowtext
+RoxygenNote: 7.0.2
