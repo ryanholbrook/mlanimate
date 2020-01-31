@@ -8,18 +8,21 @@
 ##' 
 ##' @return a data.frame with successive groups of `data` of size `delta`;
 ##' `data` is randomized before sequencing
-sequence_data_sample <- function(data, start = 1L) {
+##'
+##' @noRd
+##' @keywords internal
+sequence_data_sample <- function(data, delta, start = 1L) {
     rows <- nrow(data)
     n <- (rows - start) / delta
     data <- data[sample(nrow(data)), ]
     go <- function(i) {
         ## the size of the sample; make sure we stay within bounds
         h <- min(i * delta + start, rows)
-        bind_cols(
-            data[1:h, ],
-            group = rep.int(i, h))
+        dplyr::bind_cols(
+                   data[1:h, ],
+                   group = rep.int(i, h))
     }
-    sequenced <- bind_rows(lapply(1:n, go))
+    sequenced <- dplyr::bind_rows(lapply(1:n, go))
     sequenced
 }
 
@@ -56,31 +59,28 @@ animate_boundary <- function(sample, density, fit_and_predict, delta, start = 1L
 
 ##' Create a data frame sequenced for animation of a model parameter
 ##'
-##' A function unsed internally by animate_model_parameter
+##' A function used internally by animate_model_parameter
 ##' 
-##' @param data `data.frame`: the data to sequence
-##' @param fit_and_predict `function(sample, density, param)`: fits a
-##'     learner to the sample data and returns its predictions on the
-##'     density as a data frame; `param` is the parameter value to
-##'     vary over
 ##' @param params `list`: a named list of parameters with each entry a
 ##'     vector of values for that parameter
-##' 
-##' @return a data frame with `n` successive groups of `data`
-sequence_data_parameter <- function(data, fit_and_predict, params){
-    n <- length(params)
-    go <- function(i) {
-        fitted <- fit_and_predict(sample, density, param_seq[[i]])
-        dplyr::mutate(fitted, "group" = i)
-    }
-    density_sequenced <- dplyr::bind_rows(lapply(1:n, go))
-    ## function to be applied by lapply
-    go <- function(i) {
-        dplyr::mutate(data,
-                      group = i)
-    }
-    ## * TODO Iterate over combinations of named parameters and mutate onto data
-    sequenced <- dplyr::bind_rows(lapply(1:n, go))
+##'
+##' @return a data frame with the parameters to be sequenced over,
+##'     enumerated by a `group` column
+##'
+##' @noRd
+##' @keywords internal
+sequence_parameters <- function(params){
+    sequenced <-
+        do.call(expand.grid, params) %>%
+        ## Create a grouping column by string concatenation. This
+        ## makes it easier to display the parameters in the animation.
+        tidyr::unite(!!!names(.),
+                     col = "group",
+                     sep = " ",
+                     remove = FALSE) %>%
+        ## gganimate::transition_manual orders the frames by factor
+        ## order
+        dplyr::mutate(group = forcats::fct_inorder(factor(group)))
     sequenced
 }
 
@@ -105,11 +105,45 @@ animate_model_parameter <- function(sample, density,
                                     fit_and_predict,
                                     params,
                                     ...) {
-    n <- length(param_seq)
-    go <- function(i) {
-        fitted <- fit_and_predict(sample, density, param_seq[[i]])
-        dplyr::mutate(fitted, "group" = i)
-    }
+    parameters_sequenced <-
+        sequence_parameters(params)
+    density_sequenced <- parameters_sequenced %>%
+        dplyr::group_by(group) %>%
+        dplyr::group_modify(~ fit_and_predict(sample, density, .x),
+                            keep = FALSE) %>%
+        dplyr::ungroup() %>%
+        dplyr::inner_join(parameters_sequenced, by = "group")
+    anim <- ggplot2::ggplot() +
+        gg_plot_boundary(sample, density_sequenced) +
+        ## Animate the sample and the fitted boundary
+        gganimate::transition_manual(group) +
+        ggplot2::ggtitle('Parameters: {current_frame}')
+    anim <- gganimate::animate(anim,
+                               renderer = gganimate::gifski_renderer(),
+                               ...)
+    anim
+}
+
+
+##' Animate changes in a decision boundary as a parameter in a
+##' probability distribution changes
+##'
+##' @param sample `data.frame`: the complete sample data; should have
+##'     columns `x`, `y`, and `class`
+##' @param make_density `function(...)`: a function returning a data
+##'     frame with columns `x`, `y`, `p_0_xy`, `p_1_xy`, `optimal`,
+##'     and `class`; the parameters of the function will be drawn
+##'     from `params`
+##' @param fit_and_predict `function(sample, density)`: fits a
+##'     learner to the sample data and returns its predictions on the
+##'     density as a data frame
+##' @param params `list`: a named list of parameters with each entry a
+##'     vector of values for that parameter
+##' @param ... : arguments to pass on to `gganimate::animate`
+##' 
+##' @return a rendered `gganimate` animation object
+animate_distribution_parameter <- function(sample, make_density,
+                                    fit_and_predict, params, ...) {
     density_sequenced <- dplyr::bind_rows(lapply(1:n, go))
     ## Define the animation
     anim <- ggplot2::ggplot() +

@@ -97,7 +97,7 @@ fit_and_predict_knn <- function(sample, density, ...) {
     pred_knn <- class::knn(train = sample[, c("x", "y")],
                            cl = factor(sample$class),
                            test = density[, c("x", "y")],
-                           k = 5)
+                           ...)
     density_knn <- cbind(density,
                          "fitted" = as.integer(pred_knn) - 1.5)
     density_knn
