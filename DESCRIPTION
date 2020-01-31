@@ -10,30 +10,33 @@ Description: Provides plots and animations for machine learning topics.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Depends:
+    ggplot2
 Imports: 
-    gganimate,
-    ggplot2,
-    magrittr,
-    purrr,
-    dplyr,
-    stats
-Suggests: 
     MASS,
     class,
+    dplyr,
     earth,
     elmNNRcpp,
     extraTrees,
+    gganimate,
+    ggplot2,
     kernlab,
+    magrittr,
     mboost,
     mda,
     mgcv,
+    mvnfast,
     naivebayes,
     nnet,
+    patchwork,
     polspline,
+    purrr,
     ranger,
     rpart,
-    xgboost,
-    mvnfast,
     shadowtext,
-    patchwork
+    stats,
+    xgboost,
+    forcats,
+    tidyr
 RoxygenNote: 7.0.2
