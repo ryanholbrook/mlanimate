@@ -39,11 +39,13 @@ sequence_data_sample <- function(data, delta, start = 1L) {
 ##' @param delta `integer`: how many points to add at each step of the
 ##'     animation
 ##' @param start `integer`: how many rows for the first sample
-animate_boundary <- function(sample, density, fit_and_predict, delta, start = 1L) {
-    ## Sequence the sample data
+animate_boundary <- function(sample, density, fit_and_predict, delta,
+                             start = 1L, ...) {
+    ## Sequence the sample data to be animated
     sample_sequenced <- sequence_data_sample(sample, delta)
-    ## Sequence the density data and attach predictions from the sample
+    ## Sequence the density with the fitted predictions to be animated
     density_sequenced <- sample_sequenced %>%
+        ## Each group is a frame
         dplyr::group_by(group) %>%
         dplyr::group_modify(~ fit_and_predict(.x, density)) %>%
         dplyr::ungroup()
@@ -52,8 +54,9 @@ animate_boundary <- function(sample, density, fit_and_predict, delta, start = 1L
         gg_plot_boundary(sample_sequenced, density_sequenced) +
         ## Animate the sample and the fitted boundary
         gganimate::transition_manual(group)
-    anim <- gganimate::animate(anim, renderer = gganimate::gifski_renderer(),
-                               width = 800, height = 800)
+    anim <- gganimate::animate(anim,
+                               renderer = gganimate::gifski_renderer(),
+                               ...)
     anim
 }
 
@@ -79,7 +82,7 @@ sequence_parameters <- function(params){
                      sep = " ",
                      remove = FALSE) %>%
         ## gganimate::transition_manual orders the frames by factor
-        ## order
+        ## order, so make sure these are right
         dplyr::mutate(group = forcats::fct_inorder(factor(group)))
     sequenced
 }
@@ -105,19 +108,32 @@ animate_model_parameter <- function(sample, density,
                                     fit_and_predict,
                                     params,
                                     ...) {
+    ## Function to pass to `group_modify` below
+    ## Builds fitted density for one set of parameters
+    go <- function(x) {
+        f <- function(...) fit_and_predict(sample, density, ...)
+        do.call(f, x)
+    }
+    ## Build the parameter sequence to be animated
     parameters_sequenced <-
         sequence_parameters(params)
+    ## Build the sequence of densities with fitted predictions to be
+    ## animated
     density_sequenced <- parameters_sequenced %>%
+        ## Each group is a frame
         dplyr::group_by(group) %>%
-        dplyr::group_modify(~ fit_and_predict(sample, density, .x),
+        ## Call `fit_and_predict` on the row of parameters `.x` in
+        ## this group
+        dplyr::group_modify(~ go(.x),
                             keep = FALSE) %>%
-        dplyr::ungroup() %>%
-        dplyr::inner_join(parameters_sequenced, by = "group")
+        dplyr::ungroup()
     anim <- ggplot2::ggplot() +
+        ## Create the optimal boundary layers
         gg_plot_boundary(sample, density_sequenced) +
         ## Animate the sample and the fitted boundary
         gganimate::transition_manual(group) +
-        ggplot2::ggtitle('Parameters: {current_frame}')
+        ## Show the parameters for the current frame in the title
+    ggplot2::ggtitle('Parameters: {current_frame}')
     anim <- gganimate::animate(anim,
                                renderer = gganimate::gifski_renderer(),
                                ...)
