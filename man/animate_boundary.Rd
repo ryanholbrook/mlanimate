@@ -4,7 +4,7 @@
 \alias{animate_boundary}
 \title{Animate the evolution of a decision boundary as the sample size grows}
 \usage{
-animate_boundary(sample, density, fit_and_predict, delta, start = 1L)
+animate_boundary(sample, density, fit_and_predict, delta, start = 1L, ...)
 }
 \arguments{
 \item{sample}{`data.frame`: the complete sample data; should have
@@ -22,6 +22,9 @@ are parameters passed to the learner}
 animation}
 
 \item{start}{`integer`: how many rows for the first sample}
+}
+\value{
+a rendered `gganimate` animation object
 }
 \description{
 Animate the evolution of a decision boundary as the sample size grows

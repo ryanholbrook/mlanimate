@@ -5,41 +5,30 @@
 \title{Animate changes in a decision boundary as a parameter in a model
 changes}
 \usage{
-animate_model_parameter(sample, make_density, fit_and_predict, params, ...)
-
-animate_model_parameter(sample, make_density, fit_and_predict, params, ...)
+animate_model_parameter(sample, density, fit_and_predict, params, ...)
 }
 \arguments{
 \item{sample}{`data.frame`: the complete sample data; should have
 columns `x`, `y`, and `class`}
 
-\item{make_density}{`function(...)`: a function returning a data
-frame with columns `x`, `y`, `p_0_xy`, `p_1_xy`, `optimal`,
-and `class`; the parameters of the function will be drawn
-from `params`}
-
-\item{fit_and_predict}{`function(sample, density)`: fits a
-learner to the sample data and returns its predictions on the
-density as a data frame}
-
-\item{params}{`list`: a named list of parameters with each entry a
-vector of values for that parameter}
-
-\item{...}{: arguments to pass on to `gganimate::animate`}
-
 \item{density}{`data.frame`: the density distribution of `x` and
 `y`; should have columns `x`, `y`, and `optimal`, the contours
 of the optimal decision distribution}
+
+\item{fit_and_predict}{`function(sample, density, param)`: fits a
+learner to the sample data and returns its predictions on the
+density as a data frame; `param` is the parameter value to
+vary over}
+
+\item{params}{`list`: a named list of parameters with each
+entry a vector of values for that parameter}
+
+\item{...}{: arguments to pass on to `gganimate::animate`}
 }
 \value{
-a rendered `gganimate` animation object
-
 a rendered `gganimate` animation object
 }
 \description{
 Animate changes in a decision boundary as a parameter in a model
 changes
-
-Animate changes in a decision boundary as a parameter in a
-probability distribution changes
 }

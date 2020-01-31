@@ -39,6 +39,8 @@ sequence_data_sample <- function(data, delta, start = 1L) {
 ##' @param delta `integer`: how many points to add at each step of the
 ##'     animation
 ##' @param start `integer`: how many rows for the first sample
+##'
+##' @return a rendered `gganimate` animation object
 animate_boundary <- function(sample, density, fit_and_predict, delta,
                              start = 1L, ...) {
     ## Sequence the sample data to be animated
