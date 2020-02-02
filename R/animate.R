@@ -89,9 +89,6 @@ sequence_parameters <- function(params){
     sequenced
 }
 
-##' Animate changes in a decision boundary as a parameter in a model
-##' changes
-##'
 ##' @param sample `data.frame`: the complete sample data; should have
 ##'     columns `x`, `y`, and `class`
 ##' @param density `data.frame`: the density distribution of `x` and
@@ -105,8 +102,11 @@ sequence_parameters <- function(params){
 ##'     entry a vector of values for that parameter
 ##' @param ... : arguments to pass on to `gganimate::animate`
 ##' 
-##' @return a rendered `gganimate` animation object
-animate_model_parameter <- function(sample, density,
+##' @return a frame containing data suitible for animating
+##'
+##' @noRd
+##' @keywords internal
+make_parameter_animation_frame <- function(sample, density,
                                     fit_and_predict,
                                     params,
                                     ...) {
@@ -129,9 +129,22 @@ animate_model_parameter <- function(sample, density,
         dplyr::group_modify(~ go(.x),
                             keep = FALSE) %>%
         dplyr::ungroup()
+}
+
+##' Animate changes in a decision boundary as a parameter in a model
+##' changes
+##'
+##' @param parameter_animation_frame data.frame: a frame containing data
+##'     suitible to be animated
+##'
+##' @return a `gganimate` animation object
+##'
+##' @noRd
+##' @keywords internal
+animate_model_parameter <- function(parameter_animation_frame) {
     anim <- ggplot2::ggplot() +
         ## Create the optimal boundary layers
-        gg_plot_boundary(sample, density_sequenced) +
+        gg_plot_boundary(sample, parameter_animation_frame) +
         ## Animate the sample and the fitted boundary
         gganimate::transition_manual(group) +
         ## Show the parameters for the current frame in the title
@@ -142,7 +155,10 @@ animate_model_parameter <- function(sample, density,
     anim
 }
 
-
+plotly_model_parameter <- function(animation_frame) {
+    ggplot(animation_frame, aes(frame = 
+}
+    
 ##' Animate changes in a decision boundary as a parameter in a
 ##' probability distribution changes
 ##'
