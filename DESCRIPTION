@@ -11,7 +11,9 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends:
-    ggplot2
+    gganimate,
+    ggplot2,
+    patchwork
 Imports: 
     MASS,
     class,
@@ -19,8 +21,6 @@ Imports:
     earth,
     elmNNRcpp,
     extraTrees,
-    gganimate,
-    ggplot2,
     kernlab,
     magrittr,
     mboost,
@@ -29,7 +29,6 @@ Imports:
     mvnfast,
     naivebayes,
     nnet,
-    patchwork,
     polspline,
     purrr,
     ranger,
@@ -40,3 +39,7 @@ Imports:
     forcats,
     tidyr
 RoxygenNote: 7.0.2
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
