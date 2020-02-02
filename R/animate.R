@@ -135,7 +135,7 @@ animate_model_parameter <- function(sample, density,
         ## Animate the sample and the fitted boundary
         gganimate::transition_manual(group) +
         ## Show the parameters for the current frame in the title
-    ggplot2::ggtitle('Parameters: {current_frame}')
+    ggplot2::ggtitle('Parameters: {current_frame}  /  Frame: {progress}')
     anim <- gganimate::animate(anim,
                                renderer = gganimate::gifski_renderer(),
                                ...)
