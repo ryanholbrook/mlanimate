@@ -1,3 +1,6 @@
 * TODO Rename `gg_plot_boundary` to `ggboundary`
 * TODO Clean up `decision.org` notebook
 Load all functions from source and just include the scripting.
+* TODO Speed up data.frame operations
+Consider using data.table 
+* TODO Rename base directory to 'mlanimate'

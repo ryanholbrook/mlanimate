@@ -727,8 +727,7 @@ where
 | \(\Sigma_1 = \begin{bmatrix}2 & 0 \\ 0 & 1\end{bmatrix}\)   |
 |-------------------------------------------------------------|
 
-First let's define the parameters and generate a sample of 4000 points and then also plot the optimal boundary. (All the necessary functions were defined in the previous post. You can find the code here: )
-# TODO - collect code and publish on GitHub
+First let's define the parameters and generate a sample of 4000 points and then also plot the optimal boundary. (All the necessary functions were defined in the previous post. A repository with the code as an R package can be found [[https://github.com/ryanholbrook/mlanimate][here]].)
 
 #+begin_src r
 p <- 0.5
@@ -768,7 +767,7 @@ Now let's look at how the classifier fits on this data.
 #+begin_src r
 fit_mvn_nb <- naivebayes::naive_bayes(factor(class) ~ x + y, data = sample_mvn)
 pred_mvn_nb <- predict(fit_mvn_nb, newdata = density_mvn[, c("x", "y")], type = "prob")
-density_mvn_nb <- cbind(density_mvn, "fitted" = pred_mvn_nb[, "1"] - 0.5)
+density_mvn_nb <- cbind(density_mvn, "fitted" = pred_mvn_nb[, "1"])
 
 gg_plot_boundary(density_mvn_nb, sample_mvn, title = "Naive Bayes")
 
@@ -776,8 +775,7 @@ anim <- animate_boundary(sample_mvn, density_mvn, 10, fit_and_predict_nb)
 anim_save("/home/jovyan/work/bayeserror/nb_mvn_perfect.gif")
 #+end_src r
 
-So, we can see that the model fits the optimal boundary quite well.
-
+We can see that the model fits the optimal boundary quite well.
 
 Here is a confusion matrix. Accurate classification almost 99% of the time.
 
@@ -819,7 +817,7 @@ sample_mvn <- make_mvn_sample(n,
 density_mvn <- make_density_mvn(mu_0, sigma_0,
                                 mu_1, sigma_1,
                                 p,
-                                -3, 5, -3, 5)
+                                -4, 5, -4, 5)
 
 
 (ggplot() +
@@ -839,8 +837,8 @@ The optimal boundary is not too different.
 #+begin_src r
 fit_mvn_nb <- naivebayes::naive_bayes(factor(class) ~ x + y, data = sample_mvn)
 pred_mvn_nb <- predict(fit_mvn_nb, newdata = density_mvn[, c("x", "y")], type = "prob")
-density_mvn_nb <- cbind(density_mvn, "fitted" = pred_mvn_nb[, "1"] - 0.5)
-gg_plot_boundary(density_mvn_nb, sample_mvn, title = "Naive Bayes")
+density_mvn_nb <- cbind(density_mvn, "fitted" = pred_mvn_nb[, "1"])
+gg_plot_boundary(sample_mvn, density_mvn_nb, title = "Naive Bayes")
 
 anim <- animate_boundary(sample_mvn, density_mvn, 10, fit_and_predict_nb)
 
@@ -859,12 +857,9 @@ caret::confusionMatrix(factor(density_mvn_nb$class),
                        factor(density_mvn_nb$assigned))
 #+end_src
 
-*** Example 3 - The Misspecified Model
-
 How badly does the model degrade as the features depart from independence? To investigate, let's see how the fitted boundary changes as we vary the dependence structure in each class.
 
 #+begin_src r
-
 
 #+end_src
 
@@ -872,24 +867,24 @@ How badly does the model degrade as the features depart from independence? To in
 #+begin_src r
 fit_mvn_nb <- naivebayes::naive_bayes(factor(class) ~ x + y, data = sample_mvn)
 pred_mvn_nb <- predict(fit_mvn_nb, newdata = density_mvn[, c("x", "y")], type = "prob")
-density_mvn_nb <- cbind(density_mvn, "fitted" = pred_mvn_nb[, "1"] - 0.5)
+density_mvn_nb <- cbind(density_mvn, "fitted" = pred_mvn_nb[, "1"])
 gg_plot_boundary(density_mvn_nb, sample_mvn, title = "Naive Bayes")
 
 fit_mix_nb <- naivebayes::naive_bayes(factor(class) ~ x + y, data = sample_mix, kernel = TRUE)
 pred_mix_nb <- predict(fit_mix_nb, newdata = density_mix[, c("x", "y")], type = "prob")
-density_mix_nb <- cbind(density_mix, "fitted" = pred_mix_nb[, "1"] - 0.5)
-
+density_mix_nb <- cbind(density_mix, "fitted" = pred_mix_nb[, "1"])
 gg_plot_boundary(density_mix_nb, sample_mix, title = "Naive Bayes")
 
 
-fit_and_predict_nb <- function(sample, density) {
-    fit_nb <- naivebayes::naive_bayes(factor(class) ~ x + y, data = sample)
+fit_and_predict_nb <- function(sample, density, ...) {
+    fit_nb <- naivebayes::naive_bayes(factor(class) ~ x + y, data = sample, ...)
     pred_nb <- predict(fit_nb, newdata = density[, c("x", "y")], type = "prob")
     density_nb <- cbind(density, "fitted" = pred_nb[, "1"])
     density_nb
 }
 
-anim <- animate_boundary(sample_mvn, density_mvn, 10, fit_and_predict_nb)
+anim <- animate_boundary(sample_mvn, density_mvn, fit_and_predict_nb, delta=10)
+
 anim_save("/home/jovyan/work/bayeserror/nb_mvn.gif")
 
 anim <- animate_boundary(sample_mixn, density_mix, 100, fit_and_predict_nb)
