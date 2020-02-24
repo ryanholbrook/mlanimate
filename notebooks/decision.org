@@ -874,7 +874,6 @@ make_sigma <- function (x) {
 make_mu <- function(x) {
     matrix(c(cos(x), sin(x)), nrow = 1)
 }
->>>>>>> plotly
 
 make_density <- function(...)
     make_density_mvn(mu_0, sigma_0,
@@ -889,7 +888,7 @@ make_sample <- function(...)
                     p)
 
 (ggplot() +
- gg_density(density_mvn, z = p_0_xy,
+gg_density(density_mvn, z = p_0_xy,
             alpha = 0.25) +
  gg_density(density_mvn, z = p_1_xy,
             alpha = 0.25) +
