@@ -738,7 +738,7 @@ sigma_1 <- matrix(c(2, 0, 0, 1), nrow = 2)
 
 n <- 4000
 set.seed(31415)
-sample_mvn <- make_mvn_sample(n,
+sample_mvn <- make_sample_mvn(n,
                               mu_0, sigma_0,
                               mu_1, sigma_1,
                               p)
@@ -769,7 +769,7 @@ fit_mvn_nb <- naivebayes::naive_bayes(factor(class) ~ x + y, data = sample_mvn)
 pred_mvn_nb <- predict(fit_mvn_nb, newdata = density_mvn[, c("x", "y")], type = "prob")
 density_mvn_nb <- cbind(density_mvn, "fitted" = pred_mvn_nb[, "1"])
 
-gg_plot_boundary(density_mvn_nb, sample_mvn, title = "Naive Bayes")
+gg_plot_boundary(sample_mvn, density_mvn_nb, title = "Naive Bayes")
 
 anim <- animate_boundary(sample_mvn, density_mvn, 10, fit_and_predict_nb)
 anim_save("/home/jovyan/work/bayeserror/nb_mvn_perfect.gif")
@@ -810,7 +810,7 @@ sigma_1 <- matrix(c(1, 0.5, 0.5, 1.5), nrow = 2)
 
 n <- 4000
 set.seed(31415)
-sample_mvn <- make_mvn_sample(n,
+sample_mvn <- make_sample_mvn(n,
                               mu_0, sigma_0,
                               mu_1, sigma_1,
                               p)
@@ -859,38 +859,60 @@ caret::confusionMatrix(factor(density_mvn_nb$class),
 
 How badly does the model degrade as the features depart from independence? To investigate, let's see how the fitted boundary changes as we vary the dependence structure in each class.
 
-#+begin_src r
-
-#+end_src
-
+We'll start with a diagonal covariance matrix for both classes (meaning no dependence), and then vary the off-diagonal entries for the first class.
 
 #+begin_src r
-fit_mvn_nb <- naivebayes::naive_bayes(factor(class) ~ x + y, data = sample_mvn)
-pred_mvn_nb <- predict(fit_mvn_nb, newdata = density_mvn[, c("x", "y")], type = "prob")
-density_mvn_nb <- cbind(density_mvn, "fitted" = pred_mvn_nb[, "1"])
-gg_plot_boundary(density_mvn_nb, sample_mvn, title = "Naive Bayes")
+p <- 0.5
+mu_0 <- c(0, 2)
+sigma_0 <- matrix(c(1, 0, 0, 1), nrow = 2)
+mu_1 <- c(2, 0)
 
-fit_mix_nb <- naivebayes::naive_bayes(factor(class) ~ x + y, data = sample_mix, kernel = TRUE)
-pred_mix_nb <- predict(fit_mix_nb, newdata = density_mix[, c("x", "y")], type = "prob")
-density_mix_nb <- cbind(density_mix, "fitted" = pred_mix_nb[, "1"])
-gg_plot_boundary(density_mix_nb, sample_mix, title = "Naive Bayes")
-
-
-fit_and_predict_nb <- function(sample, density, ...) {
-    fit_nb <- naivebayes::naive_bayes(factor(class) ~ x + y, data = sample, ...)
-    pred_nb <- predict(fit_nb, newdata = density[, c("x", "y")], type = "prob")
-    density_nb <- cbind(density, "fitted" = pred_nb[, "1"])
-    density_nb
+make_sigma <- function (x) {
+    matrix(c(1, x, x, 1), nrow = 2)
 }
 
-anim <- animate_boundary(sample_mvn, density_mvn, fit_and_predict_nb, delta=10)
+make_mu <- function(x) {
+    matrix(c(cos(x), sin(x)), nrow = 1)
+}
+>>>>>>> plotly
 
-anim_save("/home/jovyan/work/bayeserror/nb_mvn.gif")
+make_density <- function(...)
+    make_density_mvn(mu_0, sigma_0,
+                     make_mu(...), sigma_0,
+                     p,
+                     -3, 5, -3, 5)
 
-anim <- animate_boundary(sample_mixn, density_mix, 100, fit_and_predict_nb)
-anim_save("/home/jovyan/work/bayeserror/nb_mix.gif")
+make_sample <- function(...)
+    make_sample_mvn(n,
+                    mu_0, sigma_0,
+                    make_mu(...), sigma_0,
+                    p)
+
+(ggplot() +
+ gg_density(density_mvn, z = p_0_xy,
+            alpha = 0.25) +
+ gg_density(density_mvn, z = p_1_xy,
+            alpha = 0.25) +
+ gg_optimal(density_mvn)) +
+(ggplot() +
+ gg_sample(sample_mvn, alpha = 0.25) +
+ gg_optimal(density_mvn)) +
+plot_annotation("The Optimal Decision Boundary")
+
+xs <- list(x = sin(seq(-2*pi+0.01, 2*pi-0.01, length = 100)))
+
+xs <- list(x = seq(-2*pi+0.01, 2*pi-0.01, length = 100))
+
+tmp <- make_density_animation_frame(make_sample,
+                                    make_density,
+                                    fit_and_predict_nb,
+                                    xs)
+
+anim <- animate_model_parameter(sample_mvn, tmp)
+anim_save("/home/jovyan/work/mlanimation/animations/nb_3.gif")
 
 #+end_src
+
 
 ** Linear Discriminant Analysis
 

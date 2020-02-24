@@ -89,8 +89,25 @@ sequence_parameters <- function(params){
     sequenced
 }
 
-##' Animate changes in a decision boundary as a parameter in a model
-##' changes
+sequence_parameters_2 <- function(params){
+    sequenced <-
+        params %>%
+        ## Create a grouping column by string concatenation. This
+        ## makes it easier to display the parameters in the animation.
+        tidyr::unite(!!!names(.),
+                     col = "group",
+                     sep = " ",
+                     remove = FALSE) %>%
+        ## gganimate::transition_manual orders the frames by factor
+        ## order, so make sure these are right
+        dplyr::mutate(group = forcats::fct_inorder(factor(group)))
+    sequenced
+}
+
+
+##' Create a frame for animating a model parameter
+##'
+##' An internal function.
 ##'
 ##' @param sample `data.frame`: the complete sample data; should have
 ##'     columns `x`, `y`, and `class`
@@ -105,8 +122,11 @@ sequence_parameters <- function(params){
 ##'     entry a vector of values for that parameter
 ##' @param ... : arguments to pass on to `gganimate::animate`
 ##' 
-##' @return a rendered `gganimate` animation object
-animate_model_parameter <- function(sample, density,
+##' @return a frame containing data suitible for animating
+##'
+##' @noRd
+##' @keywords internal
+make_parameter_animation_frame <- function(sample, density,
                                     fit_and_predict,
                                     params,
                                     ...) {
@@ -129,9 +149,22 @@ animate_model_parameter <- function(sample, density,
         dplyr::group_modify(~ go(.x),
                             keep = FALSE) %>%
         dplyr::ungroup()
+}
+
+##' Animate changes in a decision boundary as a parameter in a model
+##' changes
+##'
+##' @param parameter_animation_frame data.frame: a frame containing data
+##'     suitible to be animated
+##'
+##' @return a `gganimate` animation object
+##'
+##' @noRd
+##' @keywords internal
+animate_model_parameter <- function(sample, parameter_animation_frame, ...) {
     anim <- ggplot2::ggplot() +
         ## Create the optimal boundary layers
-        gg_plot_boundary(sample, density_sequenced) +
+        gg_plot_boundary(sample, parameter_animation_frame) +
         ## Animate the sample and the fitted boundary
         gganimate::transition_manual(group) +
         ## Show the parameters for the current frame in the title
@@ -143,10 +176,10 @@ animate_model_parameter <- function(sample, density,
     anim
 }
 
-
-##' Animate changes in a decision boundary as a parameter in a
-##' probability distribution changes
+##' Create a frame for animating a distribution parameter
 ##'
+##' An internal function.
+##' 
 ##' @param sample `data.frame`: the complete sample data; should have
 ##'     columns `x`, `y`, and `class`
 ##' @param make_density `function(...)`: a function returning a data
@@ -160,9 +193,40 @@ animate_model_parameter <- function(sample, density,
 ##'     vector of values for that parameter
 ##' @param ... : arguments to pass on to `gganimate::animate`
 ##' 
-##' @return a rendered `gganimate` animation object
-animate_distribution_parameter <- function(sample, make_density,
-                                    fit_and_predict, params, ...) {
+##' @return a frame containing data suitible for animating
+##'
+##' @noRd
+##' @keywords internal
+make_density_animation_frame <- function(make_sample, make_density,
+                                         fit_and_predict, params, ...) {
+
+    ## Function to pass to `group_modify` below
+    ## Builds fitted density for one set of parameters
+    go <- function(x) {
+        f <- function(...)
+            fit_and_predict(make_sample(...), make_density(...))
+        do.call(f, x)
+    }
+    ## Build the parameter sequence to be animated
+    parameters_sequenced <-
+        sequence_parameters(params)
+    ## Build the sequence of densities with fitted predictions to be
+    ## animated
+    density_sequenced <- parameters_sequenced %>%
+        ## Each group is a frame
+        dplyr::group_by(group) %>%
+        ## Call `fit_and_predict` on the row of parameters `.x` in
+        ## this group
+        dplyr::group_modify(~ go(.x),
+                            keep = FALSE) %>%
+        dplyr::ungroup()
+    density_sequenced
+}
+
+##' Animate changes in a decision boundary as a parameter in a
+##' probability distribution changes
+##'
+animate_distribution_parameter <- function(density_animation_frame, sample) {
     density_sequenced <- dplyr::bind_rows(lapply(1:n, go))
     ## Define the animation
     anim <- ggplot2::ggplot() +
