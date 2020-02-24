@@ -7,7 +7,7 @@
 #' @param mean_1 vector: the mean vector of the second class
 #' @param sigma_1 matrix: the 2x2 covariance matrix of the second class
 #' @param p_0 double: the prior probability of class 0
-make_mvn_sample <- function(n, mu_0, sigma_0, mu_1, sigma_1, p_0) {
+make_sample_mvn <- function(n, mu_0, sigma_0, mu_1, sigma_1, p_0) {
     n_0 <- rbinom(1, n, p_0)
     n_1 <- n - n_0
     sample_mvn <- dplyr::as_tibble(
@@ -48,15 +48,15 @@ optimal_predict <- function(x, p_0, dfun_0, dfun_1) {
     result
 }
 
-#' Construct a dataframe with posterior class probabilities and the
+#' Construct a data frame with posterior class probabilities and the
 #' optimal decision boundary over a grid on the feature space
 #' 
-#' @param mean_0 vector: the mean vector of the first class
+#' @param mu_0 vector: the mean vector of the first class
 #' @param sigma_0 matrix: the 2x2 covariance matrix of the first class
-#' @param mean_1 vector: the mean vector of the second class
+#' @param mu_1 vector: the mean vector of the second class
 #' @param sigma_1 matrix: the 2x2 covariance matrix of the second class
 #' @param p_0 double: the prior probability of class 0
-make_density_mvn <- function(mean_0, sigma_0, mean_1, sigma_1, p_0,
+make_density_mvn <- function(mu_0, sigma_0, mu_1, sigma_1, p_0,
                              x_min, x_max, y_min, y_max, delta = 0.05) {
     x <- seq(x_min, x_max, delta)
     y <- seq(y_min, y_max, delta)
@@ -77,12 +77,14 @@ make_density_mvn <- function(mean_0, sigma_0, mean_1, sigma_1, p_0,
 #'
 #' @param n integer: the size of the sample
 #' @param nu_0 numeric: the average mean of the components of the first feature
-#' @param sigma_0 matrix: covariance of components of the first feature
+#' @param tau_0 matrix: covariance of components of the first feature
 #' @param n_0 integer: class frequency of first feature in the sample
+#' @param sigma_0
 #' @param w_0 numeric: vector of weights for components of the first feature
-#' @param mean_1 numeric: the average mean of the components of the second feature
-#' @param sigma_1 matrix: covariance of components of the second feature
+#' @param nu_1 numeric: the average mean of the components of the second feature
+#' @param tau_1 matrix: covariance of components of the second feature
 #' @param n_1 integer: class frequency of second feature in the sample
+#' @param sigma_1
 #' @param w_1 numeric: vector of weights for components of the second feature
 #' @param p_0 double: the prior probability of class 0
 make_mix_sample <- function(n,
@@ -125,26 +127,26 @@ make_mix_sample <- function(n,
 #' Construct a dataframe with posterior class probabilities and the
 #' optimal decision boundary over a grid on the feature space
 #' 
-#' @param mean_0 numeric: the average mean of the components of the first feature
+#' @param mu_0 numeric: the average mean of the components of the first feature
 #' @param sigma_0 matrix: covariance of components of the first feature
 #' @param w_0 numeric: vector of weights for components of the first feature
-#' @param mean_1 numeric: the average mean of the components of the second feature
+#' @param mu_1 numeric: the average mean of the components of the second feature
 #' @param sigma_1 matrix: covariance of components of the second feature
 #' @param w_1 numeric: vector of weights for components of the second feature
 #' @param p_0 double: the prior probability of class 0
-make_density_mix <- function(mean_0, sigma_0, w_0,
-                             mean_1, sigma_1, w_1, p_0,
+make_density_mix <- function(mu_0, sigma_0, w_0,
+                             mu_1, sigma_1, w_1, p_0,
                              x_min, x_max, y_min, y_max, delta = 0.05) {
     x <- seq(x_min, x_max, delta)
     y <- seq(y_min, y_max, delta)
     density_mix <- expand.grid(x, y)
     names(density_mix) <- c("x", "y")
     dfun_0 <- function(x) mvnfast::dmixn(matrix(x, nrow = 1),
-                                         mu = mean_0,
+                                         mu = mu_0,
                                          sigma = sigma_0,
                                          w = w_0)
     dfun_1 <- function(x) mvnfast::dmixn(matrix(x, nrow = 1),
-                                         mu = mean_1,
+                                         mu = mu_1,
                                          sigma = sigma_1,
                                          w = w_1)
     optimal_mix <- function(x, y) optimal_predict(c(x, y), p_0, dfun_0, dfun_1)
