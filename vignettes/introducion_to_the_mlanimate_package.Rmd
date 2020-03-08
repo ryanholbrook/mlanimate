@@ -1,0 +1,121 @@
+---
+title: "Introducion to the mlanimate Package"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{introducion_to_the_mlanimate_package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+```{r setup}
+library(mlanimate)
+set_theme()
+```
+
+```{r normal_plots}
+p <- 0.5
+mu_0 <- c(0, 2)
+sigma_0 <- matrix(c(1, 0, 0, 1.5), nrow = 2)
+mu_1 <- c(2, 0)
+sigma_1 <- matrix(c(1.5, -0.5, -0.5, 1), nrow = 2)
+
+n <- 4000
+set.seed(31415)
+sample_mvn <- new_sample_mvn(n,
+                             mu_0, sigma_0,
+                             mu_1, sigma_1,
+                             p)
+
+x_min <- -3
+x_max <- 5
+y_min <- -3
+y_max <- 5
+density_mvn <- new_density_mvn(mu_0, sigma_0,
+                               mu_1, sigma_1,
+                               p,
+                               x_min, x_max,
+                               y_min, y_max)
+
+ggplot() +
+    layer_sample(sample_mvn)
+
+ggplot() +
+    layer_density(density_mvn, z = p_0_xy) +
+    layer_density(density_mvn, z = p_1_xy)
+
+ggplot() +
+    layer_density(density_mvn, z = p_0_xy, alpha = 0.5) +
+    layer_density(density_mvn, z = p_1_xy, alpha = 0.5) +
+    layer_optimal(density_mvn)
+```
+
+```{r normal_density}
+set.seed(31415)
+p <- 0.5
+mu_0 <- c(0, 2)
+sigma_0 <- matrix(c(1, 0, 0, 1), nrow = 2)
+mu_1 <- c(2, 0)
+
+make_sigma <- function (x) {
+    matrix(c(1.5, x, x, 1), nrow = 2)
+}
+
+make_mu <- function(x) {
+    matrix(c(cos(x), sin(x)), nrow = 1)
+}
+
+make_density <- function(...)
+    new_density_mvn(mu_0, sigma_0,
+                    make_mu(...), sigma_0,
+                    p,
+                    -3, 5, -3, 5)
+
+make_sample <- function(...)
+    new_sample_mvn(n,
+                   mu_0, sigma_0,
+                   make_mu(...), sigma_0,
+                   p)
+
+
+xs <- list(x = seq(-2*pi+0.01,
+                   2*pi-0.01,
+                   length = 100))
+animation_frame <-
+    new_DensityFrameSequence(density_fun = make_density,
+                             params = xs,
+                             method = identity)
+animation <- new_Animation(animation_frame)
+anim <- animate(animation)
+anim_save("/home/jovyan/work/mlanimation/animations/tmp.gif")
+
+```
+
+```{r fitted}
+fit_and_predict_qda <- function(sample, density, ...) {
+    fit_qda <- MASS::qda(class ~ x + y, data = sample)
+    pred_qda <- predict(fit_qda, newdata = density)
+    density_qda <- cbind(density, "fitted" = pred_qda$posterior[, "1"])
+    density_qda
+}
+
+animation_frame <-
+    new_FittedFrameSequence(sample_frame = sample_mvn,
+                            density_frame = density_mvn,
+                            fit_and_predict = fit_and_predict_qda,
+                            delta = 100)
+
+animation <- new_Animation(animation_frame)
+
+anim <- animate(animation)
+
+anim_save("/home/jovyan/work/mlanimation/animations/tmp.gif")
+
+```

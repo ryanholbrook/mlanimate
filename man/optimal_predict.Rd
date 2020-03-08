@@ -4,10 +4,10 @@
 \alias{optimal_predict}
 \title{Make an optimal prediction at a point from two class distributions}
 \usage{
-optimal_predict(x, p_0, dfun_0, dfun_1)
+optimal_predict(xy, p_0, dfun_0, dfun_1)
 }
 \arguments{
-\item{x}{vector: input}
+\item{xy}{vector: 2D coordinate}
 
 \item{p_0}{double: prior probability of class 0}
 

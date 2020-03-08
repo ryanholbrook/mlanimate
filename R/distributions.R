@@ -7,7 +7,10 @@
 #' @param mean_1 vector: the mean vector of the second class
 #' @param sigma_1 matrix: the 2x2 covariance matrix of the second class
 #' @param p_0 double: the prior probability of class 0
-make_sample_mvn <- function(n, mu_0, sigma_0, mu_1, sigma_1, p_0) {
+#'
+#' @export
+new_sample_mvn <- function(n, mu_0, sigma_0, mu_1, sigma_1, p_0) {
+    parameters <- c(as.list(environment()), list())
     n_0 <- rbinom(1, n, p_0)
     n_1 <- n - n_0
     sample_mvn <- dplyr::as_tibble(
@@ -21,30 +24,34 @@ make_sample_mvn <- function(n, mu_0, sigma_0, mu_1, sigma_1, p_0) {
     sample_mvn[(n_0 + 1):(n_0 + n_1), 3] <- 1
     sample_mvn <- sample_mvn[sample(nrow(sample_mvn)), ]
     colnames(sample_mvn) <- c("x", "y", "class")
-    sample_mvn
+    structure(sample_mvn,
+              density = "mvnfast::rmvn",
+              parameters = parameters,
+              class = c("SampleFrame", class(sample_mvn)))
 }
 
 #' Make an optimal prediction at a point from two class distributions
 #'
-#' @param x vector: input
+#' @param xy vector: 2D coordinate
 #' @param p_0 double: prior probability of class 0
 #' @param dfun_0 function(x): density of features of class 0
 #' @param dfun_1 function(x): density of features of class 1
-optimal_predict <- function(x, p_0, dfun_0, dfun_1) {
+optimal_predict <- function(xy, p_0, dfun_0, dfun_1) {
     ## Prior probability of class 1
     p_1 <- 1 - p_0
     ## Conditional probability of (x, y) given class 0
-    p_x_0 <- dfun_0(x)
+    p_xy_0 <- dfun_0(xy)
     ## Conditional probability of (x, y) given class 1
-    p_x_1 <- dfun_1(x)
+    p_xy_1 <- dfun_1(xy)
     ## Conditional probability of class 0 given (x, y)
-    p_0_xy <- p_x_0 * p_0
+    p_0_xy <- p_xy_0 * p_0
     ## Conditional probability of class 1 given (x, y)
-    p_1_xy <- p_x_1 * p_1
+    p_1_xy <- p_xy_1 * p_1
     optimal <- p_1_xy - p_0_xy
     class <- ifelse(optimal > 0, 1, 0)
-    result <- c(p_0_xy, p_1_xy, optimal, class)
-    names(result) <- c("p_0_xy", "p_1_xy", "optimal", "class")
+    result <- c(p_xy_0, p_xy_1, p_0_xy, p_1_xy, optimal, class)
+    names(result) <- c("p_xy_0", "p_xy_1", "p_0_xy", "p_1_xy",
+                       "optimal", "class")
     result
 }
 
@@ -56,8 +63,13 @@ optimal_predict <- function(x, p_0, dfun_0, dfun_1) {
 #' @param mu_1 vector: the mean vector of the second class
 #' @param sigma_1 matrix: the 2x2 covariance matrix of the second class
 #' @param p_0 double: the prior probability of class 0
-make_density_mvn <- function(mu_0, sigma_0, mu_1, sigma_1, p_0,
+#'
+#' @return a DensityFrame object
+#'
+#' @export
+new_density_mvn <- function(mu_0, sigma_0, mu_1, sigma_1, p_0,
                              x_min, x_max, y_min, y_max, delta = 0.05) {
+    parameters <- c(as.list(environment()), list())
     x <- seq(x_min, x_max, delta)
     y <- seq(y_min, y_max, delta)
     density_mvn <- expand.grid(x, y)
@@ -65,32 +77,37 @@ make_density_mvn <- function(mu_0, sigma_0, mu_1, sigma_1, p_0,
     dfun_0 <- function(x) mvnfast::dmvn(x, mu_0, sigma_0)
     dfun_1 <- function(x) mvnfast::dmvn(x, mu_1, sigma_1)
     optimal_mvn <- function(x, y) optimal_predict(c(x, y), p_0, dfun_0, dfun_1)
-    density_mvn <- dplyr::as_tibble(
+    density_mvn <- tibble::as_tibble(
         cbind(density_mvn,
               t(mapply(optimal_mvn,
                        density_mvn$x, density_mvn$y))))
-    density_mvn
+    structure(density_mvn,
+              density = "mvnfast::dmvn",
+              parameters = parameters,
+              class = c("DensityFrame", class(density_mvn)))
 }
 
 #' Generate normally distributed feature samples for a binary
 #' classification problem
 #'
 #' @param n integer: the size of the sample
-#' @param nu_0 numeric: the average mean of the components of the first feature
-#' @param tau_0 matrix: covariance of components of the first feature
+#' @param nu_0 numeric: the average mean of the components of the first class
+#' @param tau_0 matrix: covariance of components of the first class
 #' @param n_0 integer: class frequency of first feature in the sample
-#' @param sigma_0
-#' @param w_0 numeric: vector of weights for components of the first feature
-#' @param nu_1 numeric: the average mean of the components of the second feature
-#' @param tau_1 matrix: covariance of components of the second feature
+#' @param sigma_0 matrix: covariance of observations in first class
+#' @param w_0 numeric: vector of weights for components of the first class
+#' @param nu_1 numeric: the average mean of the components of the second class
+#' @param tau_1 matrix: covariance of components of the second class
 #' @param n_1 integer: class frequency of second feature in the sample
-#' @param sigma_1
+#' @param sigma_1 matrix: covariance of observations in second class
 #' @param w_1 numeric: vector of weights for components of the second feature
 #' @param p_0 double: the prior probability of class 0
-make_mix_sample <- function(n,
-                            nu_0, tau_0, n_0, sigma_0, w_0,
-                            nu_1, tau_1, n_1, sigma_1, w_1,
-                            p_0) {
+#'
+#' @export
+new_sample_mix <- function(n,
+                           nu_0, tau_0, n_0, sigma_0, w_0,
+                           nu_1, tau_1, n_1, sigma_1, w_1,
+                           p_0) {
     ## Number of Components for Each Class
     l_0 <- length(w_0)
     l_1 <- length(w_1)
@@ -134,9 +151,11 @@ make_mix_sample <- function(n,
 #' @param sigma_1 matrix: covariance of components of the second feature
 #' @param w_1 numeric: vector of weights for components of the second feature
 #' @param p_0 double: the prior probability of class 0
-make_density_mix <- function(mu_0, sigma_0, w_0,
-                             mu_1, sigma_1, w_1, p_0,
-                             x_min, x_max, y_min, y_max, delta = 0.05) {
+#'
+#' @export
+new_density_mix <- function(mu_0, sigma_0, w_0,
+                            mu_1, sigma_1, w_1, p_0,
+                            x_min, x_max, y_min, y_max, delta = 0.05) {
     x <- seq(x_min, x_max, delta)
     y <- seq(y_min, y_max, delta)
     density_mix <- expand.grid(x, y)
@@ -156,3 +175,9 @@ make_density_mix <- function(mu_0, sigma_0, w_0,
                        density_mix$x, density_mix$y))))
     density_mix
 }
+
+## New naming convention
+make_sample_mvn <- new_sample_mvn
+make_density_mvn <- new_density_mvn
+make_sample_mix <- new_sample_mix
+make_density_mix <- new_density_mix

@@ -1,0 +1,49 @@
+* Facet Tables
+
+
+#+begin_src R
+#' Plot a table of parameters
+df <- mtcars[1:10, c("mpg","cyl","disp","hp")]
+p <- qplot(x = mpg, y = cyl, data = df)
+g <- ggplotGrob(p)
+panel_id <- g$layout[g$layout$name == "panel", c("t", "l")]
+table <- tableGrob(df,
+                   heights = unit(rep(1,nrow(df)), "null"))
+g <- gtable_add_cols(g, sum(table$widths), 0)
+g <- gtable_add_grob(g, table, t = panel_id$t, l = 1)
+grid.newpage()
+grid.draw(g)
+
+grid.newpage()
+
+grid.force()
+grid.ls()
+
+table <- tableGrob(df,
+                   heights = unit(rep(1,nrow(df)), "null"))
+
+pmain <-
+    ggplot() +
+    geom_point(aes(x = hp, y = mpg), data = mtcars)
+table <- tableGrob(df,
+                   heights = unit(rep(1,nrow(df)), "null"))
+ggdraw(insert_yaxis_grob(pmain, table, position = "right"))
+
+df <-
+    mtcars %>%
+    group_by(cyl) %>%
+    nest()
+
+p <-
+    ggplot() +
+    xlim(0, 1) +
+    ylim(0, 1) +
+    ggpmisc::geom_table(aes(x = 0, y = 0, label = data), data = df) +
+    cowplot::theme_nothing()
+anim <- p +
+    transition_manual(cyl)
+anim <- animate(anim, nframes = 3)
+
+anim_save("/home/jovyan/work/mlanimation/tmp.gif", anim)
+#+end_src
+

@@ -742,10 +742,16 @@ sample_mvn <- make_sample_mvn(n,
                               mu_0, sigma_0,
                               mu_1, sigma_1,
                               p)
+x_min <- -3
+x_max <- 5
+y_min <- -3
+y_max <- 3
 density_mvn <- make_density_mvn(mu_0, sigma_0,
                                 mu_1, sigma_1,
                                 p,
-                                -3, 5, -3, 5)
+                                x_min, x_max,
+                                y_min, y_max)
+
 
 
 (ggplot() +
@@ -785,7 +791,6 @@ density_mvn_nb[, "assigned"] <- ifelse(density_mvn_nb$fitted > 0, 1, 0)
 caret::confusionMatrix(factor(density_mvn_nb$class),
                        factor(density_mvn_nb$assigned))
 #+end_src
-
 
 *** Example 2 - Dependent Features
 
@@ -912,7 +917,6 @@ anim_save("/home/jovyan/work/mlanimation/animations/nb_3.gif")
 
 #+end_src
 
-
 ** Linear Discriminant Analysis
 
 #+begin_src r
@@ -959,6 +963,51 @@ anim_save("/home/jovyan/work/bayeserror/qda_mix.gif")
 ** Conclusion
 
 All of these classifiers involved trade-offs.
+
+* Other Distributions
+
+Multivariate-t
+
+#+begin_src R
+p <- 0.5
+mu_0 <- c(0, 2)
+df_0 <- 5
+sigma_0 <- matrix(c(2, 0.5, 0.5, 1), nrow = 2)
+mu_1 <- c(2, 0)
+sigma_1 <- matrix(c(0.5, -0.5, -0.5, 1), nrow = 2)
+df_1 <- 5
+n <- 4000
+set.seed(31415)
+sample_mvt <- make_sample_mvt(n,
+                              mu_0, sigma_0, df_0,
+                              mu_1, sigma_1, df_1,
+                              p)
+density_mvt <- make_density_mvt(mu_0, sigma_0, df_0,
+                                mu_1, sigma_1, df_1,
+                                p,
+                                -3, 5, -3, 5)
+(ggplot() +
+ gg_sample(sample_mvt, alpha = 0.25) +
+ gg_optimal(density_mvt)) +
+(ggplot() +
+ gg_density(density_mvt, z = p_0_xy,
+            alpha = 0.25) +
+ gg_density(density_mvt, z = p_1_xy,
+            alpha = 0.25) +
+ gg_optimal(density_mvt)) +
+plot_annotation("The Optimal Decision Boundary")
+
+fit_mvt_nb <- naivebayes::naive_bayes(factor(class) ~ x + y, data = sample_mvt)
+pred_mvt_nb <- predict(fit_mvt_nb, newdata = density_mvt[, c("x", "y")], type = "prob")
+density_mvt_nb <- cbind(density_mvt, "fitted" = pred_mvt_nb[, "1"])
+gg_plot_boundary(sample_mvt, density_mvt_nb, title = "Naive Bayes")
+
+fit_mvt_qda <- MASS::qda(class ~ x + y, data = sample_mvt)
+pred_mvt_qda <- predict(fit_mvt_qda, newdata = density_mvt)
+density_mvt_qda <- cbind(density_mvt, "fitted" = pred_mvt_qda$posterior[, "1"])
+gg_plot_boundary(sample_mvt, density_mvt_qda, title = "QDA")
+
+#+end_src
 
 * Classifiers
 ** Introduction
