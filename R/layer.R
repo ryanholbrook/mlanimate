@@ -52,7 +52,7 @@ layer_density <- function(data, z, size = 1, color = "black", alpha = 1, ...) {
 #'
 #' @export
 layer_optimal <- function(data, breaks = c(0), ...) {
-    layer_density(data, z = optimal, breaks = breaks, ...)
+    layer_density(data, z = "optimal", breaks = breaks, ...)
 }
 
 #' Make a layer of predicted probabilities

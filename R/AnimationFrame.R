@@ -1,6 +1,6 @@
 #' Create an AnimationFrame object
 #'
-#' 
+#'
 new_AnimationFrame <- function() {
     data <- tibble::tibble()
     call <- list()
@@ -20,7 +20,7 @@ new_AnimationFrame <- function() {
 #' @param ...
 #'
 #' @return a FittedFrameSequence
-#' 
+#'
 #' @export
 new_FittedFrameSequence <- function(sample_frame, density_frame,
                                     fit_and_predict,
@@ -56,7 +56,7 @@ new_sample_frame <- function(sample_fun, ...) {
 #' Create a frame for animating a distribution parameter
 #'
 #' An internal function.
-#' 
+#'
 #' @param density_fun `function(...)`: a function returning a
 #'     DensityFrame object. The parameters of the function will be
 #'     drawn from `params`
@@ -64,12 +64,12 @@ new_sample_frame <- function(sample_fun, ...) {
 #'     list of values for that parameter
 #' @param method `function`
 #' @param ... : options to be passed to `layer_density` when plotting
-#' 
+#'
 #' @return a DensityFrameSequence object
 #'
 #' @export
 new_DensityFrameSequence <- function(density_fun, params,
-                                     method = expand.grid, ...) {
+                                     method = expand.grid) {
     call <- c(as.list(environment()), list())
     ## Build the parameter sequence to be animated
     parameters_sequenced <-
@@ -95,7 +95,3 @@ new_DensityFrameSequence <- function(density_fun, params,
 new_model_frame <- function(sample_frame, density_frame, fit_and_predict, ...) {
     fit_and_predict(sample_frame, density_frame, fit_and_predict, ...)
 }
-
-
-
-

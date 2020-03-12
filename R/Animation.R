@@ -6,16 +6,47 @@ new_Animation <- function(frame_sequence, ...) {
     UseMethod("new_Animation")
 }
 
+#'
+#' @param zs list: names of the variables whose contours to plot
+#' 
 #' @export
-new_Animation.DensityFrameSequence <- function(frame_sequence, ...) {
-    layer_options <- attr(frame_sequence, "layer_options")
-    ## TODO - add a list of z-variables and a layer for each
-    layers <- list(layer_density(frame_sequence, optimal))
+new_Animation.DensityFrameSequence <- function(frame_sequence,
+                                               distribution = "posterior",
+                                               optimal = TRUE,
+                                               ...) {
+    alpha <- ifelse(optimal, 1, 1)
+    colors <- scales::hue_pal()(2)
+    layers <- list()
+    if (distribution == "posterior") {
+        layers <- c(layers,
+                    layer_density(frame_sequence,
+                                  z = "p_0_xy",
+                                  alpha = alpha,
+                                  color = colors[[1]]),
+                    layer_density(frame_sequence,
+                                  z = "p_1_xy",
+                                  alpha = alpha,
+                                  color = colors[[2]]))
+
+    } else if (distribution == "likelihood") {
+        layers <- c(layers,
+                    layer_density(frame_sequence,
+                                  z = "p_xy_0",
+                                  alpha = alpha),
+                    layer_density(frame_sequence,
+                                  z = "p_xy_1",
+                                  alpha = alpha))
+    }
+    if (optimal) {
+        layers <- c(layers,
+                    layer_optimal(frame_sequence))
+    }
     structure(layers,
               class = c("Animation", class(layers)))
 }
 
-new_Animation.FittedFrameSequence <- function(frame_sequence, ...) {
+new_Animation.FittedFrameSequence <- function(frame_sequence,
+                                              ...) {
     layer_options <- attr(frame_sequence, "layer_options")
     sample <- frame_sequence$sample
     density <- frame_sequence$density
@@ -54,7 +85,8 @@ animate.Animation <- function(mlanimation,
     anim <- gganimate::animate(anim,
                                renderer = gganimate::gifski_renderer(),
                                width = width,
-                               height = height)
+                               height = height,
+                               ...)
     anim
 
 }

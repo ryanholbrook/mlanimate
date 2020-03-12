@@ -10,9 +10,11 @@
 #'
 #' @export
 new_sample_mvn <- function(n, mu_0, sigma_0, mu_1, sigma_1, p_0) {
-    parameters <- c(as.list(environment()), list())
+    call <- c(as.list(environment()), list())
+    ## Class Frequency
     n_0 <- rbinom(1, n, p_0)
     n_1 <- n - n_0
+    ## Sample the Features
     sample_mvn <- dplyr::as_tibble(
         rbind(mvnfast::rmvn(n_0,
                             mu = mu_0,
@@ -20,13 +22,15 @@ new_sample_mvn <- function(n, mu_0, sigma_0, mu_1, sigma_1, p_0) {
               mvnfast::rmvn(n_1,
                             mu = mu_1,
                             sigma = sigma_1)))
+    ## Define Classes
     sample_mvn[1:n_0, 3] <- 0
     sample_mvn[(n_0 + 1):(n_0 + n_1), 3] <- 1
+    ## Randomize
     sample_mvn <- sample_mvn[sample(nrow(sample_mvn)), ]
     colnames(sample_mvn) <- c("x", "y", "class")
     structure(sample_mvn,
               density = "mvnfast::rmvn",
-              parameters = parameters,
+              call = call,
               class = c("SampleFrame", class(sample_mvn)))
 }
 
@@ -69,13 +73,17 @@ optimal_predict <- function(xy, p_0, dfun_0, dfun_1) {
 #' @export
 new_density_mvn <- function(mu_0, sigma_0, mu_1, sigma_1, p_0,
                              x_min, x_max, y_min, y_max, delta = 0.05) {
-    parameters <- c(as.list(environment()), list())
+    call <- c(as.list(environment()), list())
     x <- seq(x_min, x_max, delta)
     y <- seq(y_min, y_max, delta)
     density_mvn <- expand.grid(x, y)
     names(density_mvn) <- c("x", "y")
-    dfun_0 <- function(x) mvnfast::dmvn(x, mu_0, sigma_0)
-    dfun_1 <- function(x) mvnfast::dmvn(x, mu_1, sigma_1)
+    dfun_0 <- function(x) mvnfast::dmvn(matrix(x, nrow = 1),
+                                        mu = mu_0,
+                                        sigma = sigma_0)
+    dfun_1 <- function(x) mvnfast::dmvn(matrix(x, nrow = 1),
+                                        mu = mu_1,
+                                        sigma = sigma_1)
     optimal_mvn <- function(x, y) optimal_predict(c(x, y), p_0, dfun_0, dfun_1)
     density_mvn <- tibble::as_tibble(
         cbind(density_mvn,
@@ -83,7 +91,7 @@ new_density_mvn <- function(mu_0, sigma_0, mu_1, sigma_1, p_0,
                        density_mvn$x, density_mvn$y))))
     structure(density_mvn,
               density = "mvnfast::dmvn",
-              parameters = parameters,
+              call = call,
               class = c("DensityFrame", class(density_mvn)))
 }
 
@@ -108,6 +116,7 @@ new_sample_mix <- function(n,
                            nu_0, tau_0, n_0, sigma_0, w_0,
                            nu_1, tau_1, n_1, sigma_1, w_1,
                            p_0) {
+    call <- c(as.list(environment()), list())
     ## Number of Components for Each Class
     l_0 <- length(w_0)
     l_1 <- length(w_1)
@@ -123,22 +132,28 @@ new_sample_mix <- function(n,
     f_0 <- mvnfast::rmixn(n = n_0,
                           mu = mu_0, sigma = sigma_0, w = w_0,
                           retInd = TRUE)
-    c_0 <- attr(f_0, "index")
     f_1 <- mvnfast::rmixn(n = n_1,
                           mu = mu_1, sigma = sigma_1, w = w_1,
                           retInd = TRUE)
-    c_1 <- attr(f_1, "index")
+    
     sample_mix <- as.data.frame(rbind(f_0, f_1))
-    sample_mix[, 3] <- c(c_0, c_1)
+    ## Store Component Index for each Class
+    sample_mix[, 3] <- c(attr(f_0, "index"),
+                         attr(f_1, "index"))
     ## Define Classes
     sample_mix[1:n_0, 4] <- 0
     sample_mix[(n_0 + 1):(n_0 + n_1), 4] <- 1
+    ## Randomize
     sample_mix <- sample_mix[sample(nrow(sample_mix)), ]
-    names(sample_mix) <- c("x", "y", "component", "class")
+    colnames(sample_mix) <- c("x", "y", "component", "class")
     ## Store Component Means
     attr(sample_mix, "mu_0") <- mu_0
     attr(sample_mix, "mu_1") <- mu_1
-    sample_mix
+    structure(sample_mix,
+              "mu_0" = mu_0,
+              "mu_1" = mu_1,
+              call = call,
+              class = c("SampleFrame", class(sample_mvn)))
 }
 
 #' Construct a dataframe with posterior class probabilities and the
@@ -156,6 +171,7 @@ new_sample_mix <- function(n,
 new_density_mix <- function(mu_0, sigma_0, w_0,
                             mu_1, sigma_1, w_1, p_0,
                             x_min, x_max, y_min, y_max, delta = 0.05) {
+    call <- c(as.list(environment()), list())
     x <- seq(x_min, x_max, delta)
     y <- seq(y_min, y_max, delta)
     density_mix <- expand.grid(x, y)
@@ -169,15 +185,12 @@ new_density_mix <- function(mu_0, sigma_0, w_0,
                                          sigma = sigma_1,
                                          w = w_1)
     optimal_mix <- function(x, y) optimal_predict(c(x, y), p_0, dfun_0, dfun_1)
-    density_mix <- dplyr::as_tibble(
+    density_mix <- tibble::as_tibble(
         cbind(density_mix,
               t(mapply(optimal_mix,
                        density_mix$x, density_mix$y))))
-    density_mix
+    structure(density_mix,
+              density = "mvnfast::dmixn",
+              call = call,
+              class(c("DensityFrame", class(density_mix))))
 }
-
-## New naming convention
-make_sample_mvn <- new_sample_mvn
-make_density_mvn <- new_density_mvn
-make_sample_mix <- new_sample_mix
-make_density_mix <- new_density_mix

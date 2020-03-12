@@ -26,12 +26,22 @@ fit_and_predict_nb <- function(sample, density, ...) {
 
 
 #' @rdname fit_and_predict
-fit_and_predict_qda <- function(sample, density, ...) {
-    fit_qda <- MASS::qda(class ~ x + y, data = sample)
+fit_and_predict_lda <- function(sample, density, ...) {
+    fit_qda <- MASS::lda(class ~ x + y, data = sample, ...)
     pred_qda <- predict(fit_qda, newdata = density)
     density_qda <- cbind(density, "fitted" = pred_qda$posterior[, "1"])
     density_qda
 }
+
+
+#' @rdname fit_and_predict
+fit_and_predict_qda <- function(sample, density, ...) {
+    fit_qda <- MASS::qda(class ~ x + y, data = sample, ...)
+    pred_qda <- predict(fit_qda, newdata = density)
+    density_qda <- cbind(density, "fitted" = pred_qda$posterior[, "1"])
+    density_qda
+}
+
 
 #' An internal function
 #'
@@ -58,7 +68,7 @@ fit_and_predict_mda <- function(sample, density, ...) {
 #' @rdname fit_and_predict
 fit_and_predict_glm <- function(sample, density, ...) {
     fit_glm <- glm(class ~ x + y, data = sample, family = "binomial")
-    pred_glm <- predict(fit_glm, newdata = density_mvn, type = "response")
+    pred_glm <- predict(fit_glm, newdata = density, type = "response")
     density_glm <- cbind(density, "fitted" = pred_glm)
     density_glm
 }
@@ -142,7 +152,7 @@ fit_and_predict_etrees <- function(sample, density, ...) {
     pred_etrees <- predict(fit_etrees,
                        newdata = density[, c("x", "y")],
                        probability = TRUE)
-    density_etrees <- cbind(density, "fitted" = pred_mda[, "1"])
+    density_etrees <- cbind(density, "fitted" = pred_etrees[, "1"])
     density_etrees
 }
 
@@ -199,10 +209,10 @@ fit_and_predict_nn <- function(sample, density, seed = 31415) {
 #' @rdname fit_and_predict
 fit_and_predict_elm <- function(sample, density, ...) {
     set.seed(31415)
-    fit_elm <- elmNNRcpp::elm_train(x = as.matrix(sample[, c("x", "y")]),
-                                    y = elmNNRcpp::onehot_encode(sample[["class"]]),
-                                    nhid = 10,
-                                    actfun = "sig")
+    fit_elm <-
+        elmNNRcpp::elm_train(x = as.matrix(sample[, c("x", "y")]),
+                             y = elmNNRcpp::onehot_encode(sample[["class"]]),
+                             nhid = 10, actfun = "sig")
     pred_elm <- elmNNRcpp::elm_predict(fit_elm,
                                        as.matrix(density[, c("x", "y")]))
     density_elm <- cbind(density, "fitted" = pred_elm[, 1])

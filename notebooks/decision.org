@@ -665,7 +665,7 @@ anim <- animate(anim, renderer = gifski_renderer(),
 anim
 
 #+end_src
-a
+
 #+name: imbalance-mix
 #+BEGIN_EXPORT html
 <video autoplay loop mutued playsinline>

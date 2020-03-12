@@ -15,10 +15,14 @@ knitr::opts_chunk$set(
 )
 ```
 
+
+
 ```{r setup}
 library(mlanimate)
 set_theme()
 ```
+
+
 
 ```{r normal_plots}
 p <- 0.5
@@ -27,7 +31,7 @@ sigma_0 <- matrix(c(1, 0, 0, 1.5), nrow = 2)
 mu_1 <- c(2, 0)
 sigma_1 <- matrix(c(1.5, -0.5, -0.5, 1), nrow = 2)
 
-n <- 4000
+n <- 6000
 set.seed(31415)
 sample_mvn <- new_sample_mvn(n,
                              mu_0, sigma_0,
@@ -57,16 +61,12 @@ ggplot() +
     layer_optimal(density_mvn)
 ```
 
-```{r normal_density}
+
+```{r linear_mean}
 set.seed(31415)
 p <- 0.5
 mu_0 <- c(0, 2)
-sigma_0 <- matrix(c(1, 0, 0, 1), nrow = 2)
-mu_1 <- c(2, 0)
-
-make_sigma <- function (x) {
-    matrix(c(1.5, x, x, 1), nrow = 2)
-}
+sigma_0 <- matrix(c(1.5, -0.5, -0.5, 1), nrow = 2)
 
 make_mu <- function(x) {
     matrix(c(cos(x), sin(x)), nrow = 1)
@@ -76,7 +76,7 @@ make_density <- function(...)
     new_density_mvn(mu_0, sigma_0,
                     make_mu(...), sigma_0,
                     p,
-                    -3, 5, -3, 5)
+                    -4, 4, -4, 5)
 
 make_sample <- function(...)
     new_sample_mvn(n,
@@ -85,20 +85,61 @@ make_sample <- function(...)
                    p)
 
 
-xs <- list(x = seq(-2*pi+0.01,
+steps <- 50
+nframes <- 50
+fps <- 10
+xs <- list(x = seq(0.01,
                    2*pi-0.01,
-                   length = 100))
-animation_frame <-
-    new_DensityFrameSequence(density_fun = make_density,
-                             params = xs,
-                             method = identity)
-animation <- new_Animation(animation_frame)
-anim <- animate(animation)
-anim_save("/home/jovyan/work/mlanimation/animations/tmp.gif")
+                   length = steps))
+new_DensityFrameSequence(density_fun = make_density,
+                         params = xs,
+                         method = identity) %>%
+    new_Animation() %>%
+    animate(nframes = nframes,
+            fps = fps)
+anim_save("/home/jovyan/work/mlanimate/animations/linear_mean.gif")
+```
+
+
+
+```{r quadratic_mean}
+set.seed(31415)
+p <- 0.5
+mu_0 <- c(0, 2)
+sigma_0 <- matrix(c(1.5, -0.5, -0.5, 1), nrow = 2)
+sigma_1 <- matrix(c(1, 0.75, 0.75, 1.25), nrow = 2)
+
+make_mu <- function(x) {
+    matrix(c(cos(x), sin(x)), nrow = 1)
+}
+
+make_density <- function(...)
+    new_density_mvn(mu_0, sigma_0,
+                    make_mu(...), sigma_1,
+                    p,
+                    -3.5, 4.5, -4, 5)
+
+steps <- 50
+nframes <- 50
+fps <- 10
+xs <- list(x = seq(0.01,
+                   2*pi-0.01,
+                   length = steps))
+
+new_DensityFrameSequence(density_fun = make_density,
+                         params = xs,
+                         method = identity) %>%
+    new_Animation() %>%
+    animate(nframes = nframes,
+            fps = fps)
+
+anim_save("/home/jovyan/work/mlanimate/animations/quadratic_mean.gif")
 
 ```
 
-```{r fitted}
+
+
+```{r fitting_lda}
 fit_and_predict_qda <- function(sample, density, ...) {
     fit_qda <- MASS::qda(class ~ x + y, data = sample)
     pred_qda <- predict(fit_qda, newdata = density)
@@ -106,16 +147,32 @@ fit_and_predict_qda <- function(sample, density, ...) {
     density_qda
 }
 
-animation_frame <-
-    new_FittedFrameSequence(sample_frame = sample_mvn,
-                            density_frame = density_mvn,
-                            fit_and_predict = fit_and_predict_qda,
-                            delta = 100)
+new_FittedFrameSequence(sample_frame = sample_mvn,
+                        density_frame = density_mvn,
+                        fit_and_predict = fit_and_predict_qda,
+                        delta = 10,
+                        start = 100) %>%
+    new_Animation(animation_frame) %>%
+    animate(animation)
+anim_save("/home/jovyan/work/mlanimate/animations/fitting_qda.gif")
+```
 
-animation <- new_Animation(animation_frame)
 
-anim <- animate(animation)
 
-anim_save("/home/jovyan/work/mlanimation/animations/tmp.gif")
+```{r fitting_qda}
+fit_and_predict_qda <- function(sample, density, ...) {
+    fit_qda <- MASS::qda(class ~ x + y, data = sample)
+    pred_qda <- predict(fit_qda, newdata = density)
+    density_qda <- cbind(density, "fitted" = pred_qda$posterior[, "1"])
+    density_qda
+}
 
+new_FittedFrameSequence(sample_frame = sample_mvn,
+                        density_frame = density_mvn,
+                        fit_and_predict = fit_and_predict_qda,
+                        delta = 10,
+                        start = 100) %>%
+    new_Animation(animation_frame) %>%
+    animate(animation)
+anim_save("/home/jovyan/work/mlanimate/animations/fitting_qda.gif")
 ```

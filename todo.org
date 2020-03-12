@@ -1,7 +1,8 @@
 * DONE [#A] Rename MLAnimationFrame.R objects
 * TODO Add class color to contour plots
 * TODO Add optimal classification color layer
-* TODO Refactor mixture distributions
+* TODO Add Caret interface
+* DONE Refactor mixture distributions
 * TODO Speed up data.frame operations
-Consider using data.table 
-* TODO Rename base directory to 'mlanimate'
+* DONE Rename base directory to 'mlanimate'
+* TODO Add layer_options to Animate

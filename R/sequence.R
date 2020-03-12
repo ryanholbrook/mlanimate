@@ -4,7 +4,7 @@
 ##' @param data `data.frame`: the data to sequence
 ##' @param delta `int`: how many rows to increase by at each iteration
 ##' @param start `int`: how many rows for the first sample
-##' 
+##'
 ##' @return a data.frame with successive groups of `data` of size `delta`;
 ##' `data` is randomized before sequencing
 ##'
@@ -40,7 +40,7 @@ sequence_sample <- function(data, delta, start = 1L) {
 ##'
 ##' @noRd
 ##' @keywords internal
-sequence_parameters <- function(params, method = expand.grid){
+sequence_parameters <- function(params, method = expand.grid) {
     sequenced <- params %>%
         method() %>%
         tibble::as_tibble() %>%
